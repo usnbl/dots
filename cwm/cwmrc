@@ -57,7 +57,6 @@ bind-key 4S-9           window-movetogroup-9
 # ------------------------------------------------------------------------------
 
 bind-key 4-Return "kitty --single-instance"         
-bind-key 4C-t "exec ./~/.local/bin/temperature-gui"
 bind-key 4-w menu-window       
 bind-key 4-d menu-exec        
 bind-key 4-s menu-ssh        
