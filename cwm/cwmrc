@@ -1,0 +1,159 @@
+# ==============================================================================
+#  CONFIGURACIÓN MAESTRA DE CWM (VOID LINUX EDITION)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. AJUSTES DEL MOTOR (CORE)
+# ------------------------------------------------------------------------------
+
+# FUENTE Y TERMINAL
+fontname "JuliaMono NerdFont:size=11"
+
+# COMPORTAMIENTO DE VENTANAS
+sticky yes                # Grupos persistentes (fundamental)
+focus-mode pointer        # El foco sigue al ratón (fluidez total)
+
+# BORDES (Estética Cyberpunk Minimalista)
+borderwidth 3             # Borde un poco más grueso para ver bien el estado
+color-activeborder "#B1A1E1"    
+color-inactiveborder "#D8D1F1" 
+color-groupborder "#FF00FF"    
+color-urgencyborder "#FF0000"  
+color-menubg "#DED3CB"
+# GAPS (Márgenes de pantalla)
+# Esto define el límite del "Falso Fullscreen". Deja un espacio aireado.
+gap 5 5 5 5
+
+# IMANTACIÓN (La clave para ordenar ventanas flotantes sin volverse loco)
+snapdist 4               # Las ventanas se pegan a 15px de distancia
+
+# ------------------------------------------------------------------------------
+# 2. VELOCIDAD DE MOVIMIENTO (SISTEMA DUAL)
+# ------------------------------------------------------------------------------
+# Aquí está la magia:
+# moveamount = paso corto (precisión).
+# Las funciones "-big" multiplican esto por 10 (velocidad).
+
+moveamount 4  # Paso fino de 4 píxeles. (El paso rápido será 40px)
+
+# ------------------------------------------------------------------------------
+# 3. ATAJOS DE APLICACIONES Y MENÚS (NATIVOS)
+# ------------------------------------------------------------------------------
+
+bind-key 4-Return "kitty --single-instance"         # Win + Enter -> Terminal (Sakura)
+bind-key 4C-t "exec ./~/.local/bin/temperature-gui"
+bind-key 4-w menu-window        # Win + w     -> Buscador de Ventanas (Spotlight nativo)
+bind-key 4-d menu-exec          # Win + d     -> Lanzador de Apps (dmenu nativo)
+bind-key 4-s menu-ssh           # Win + s     -> Menú SSH (Si usas servidores, esto es oro)
+# ------------------------------------------------------------------------------
+# 4. MOVIMIENTO VIM: SISTEMA DUAL (RÁPIDO vs PRECISO)
+# ------------------------------------------------------------------------------
+# Solución para tu flecha mala.
+
+# --- MODO RÁPIDO (Win + hjkl) ---
+# Usa esto el 90% del tiempo. Mueve ventanas grandes distancias.
+bind-key 4-h window-move-left-big
+bind-key 4-j window-move-down-big
+bind-key 4-k window-move-up-big
+bind-key 4-l window-move-right-big
+
+# --- MODO PRECISIÓN (Win + Ctrl + hjkl) ---
+# Usa esto para alinear bordes al milímetro.
+bind-key 4C-h window-move-left
+bind-key 4C-j window-move-down
+bind-key 4C-k window-move-up
+bind-key 4C-l window-move-right
+
+# ------------------------------------------------------------------------------
+# 5. REDIMENSIONAMIENTO VIM: SISTEMA DUAL
+# ------------------------------------------------------------------------------
+
+# --- MODO RÁPIDO (Win + Shift + hjkl) ---
+bind-key 4S-h window-resize-left-big
+bind-key 4S-j window-resize-down-big
+bind-key 4S-k window-resize-up-big
+bind-key 4S-l window-resize-right-big
+
+# --- MODO PRECISIÓN (Win + Shift + Ctrl + hjkl) ---
+bind-key 4SC-h window-resize-left
+bind-key 4SC-j window-resize-down
+bind-key 4SC-k window-resize-up
+bind-key 4SC-l window-resize-right
+
+# ------------------------------------------------------------------------------
+# 6. MODOS DE PANTALLA (FULLSCREEN REAL vs FALSO)
+# ------------------------------------------------------------------------------
+
+# FULLSCREEN REAL (Win + f)
+# Cubre TODO, tapa bordes, tapa gaps. Inmersión total (Juegos/Video).
+bind-key 4-f window-fullscreen
+
+# FALSO FULLSCREEN / MAXIMIZAR (Win + m)
+# Ocupa toda la pantalla pero respeta los 'gaps' y bordes.
+# Ideal para trabajar concentrado sin perder contexto.
+bind-key 4-m window-maximize
+
+# MAXIMIZADO PARCIAL (Vertical/Horizontal)
+bind-key 4S-m window-vmaximize   # Solo alto (tipo lectura)
+bind-key 4C-m window-hmaximize   # Solo ancho
+
+# ------------------------------------------------------------------------------
+# 7. TILING NATIVO (LA JOYA OCULTA DE CWM)
+# ------------------------------------------------------------------------------
+# CWM no es un Tiling WM, pero tiene dos funciones nativas brutales
+# que ordenan las ventanas visibles instantáneamente.
+
+# Win + t: Tiling Vertical (Reparte el espacio verticalmente entre las ventanas actuales)
+bind-key 4-t window-vtile
+
+# Win + Shift + t: Tiling Horizontal (Reparte el espacio horizontalmente)
+bind-key 4S-t window-htile
+
+# ------------------------------------------------------------------------------
+# 8. CICLADO DE VENTANAS (TU PREFERENCIA)
+# ------------------------------------------------------------------------------
+
+bind-key M-Tab window-cycle     # Alt + Tab -> Ciclo hacia adelante
+bind-key 4-Tab window-rcycle    # Win + Tab -> Ciclo hacia atrás
+
+# ------------------------------------------------------------------------------
+# 9. EL NUMPAD TÁCTICO (POSICIONAMIENTO INSTANTÁNEO)
+# ------------------------------------------------------------------------------
+# Usamos el movimiento BIG para lanzar ventanas a los extremos.
+
+# Fila Inferior
+bind-key 4-KP_End   window-move-left-big  # 1 (Esq. Inf. Izq)
+bind-key 4-KP_Down  window-move-down-big  # 2 (Abajo)
+bind-key 4-KP_Next  window-move-right-big # 3 (Esq. Inf. Der)
+
+# Fila Media
+bind-key 4-KP_Left  window-move-left-big  # 4 (Izquierda)
+bind-key 4-KP_Begin window-maximize       # 5 (CENTRO -> Reset/Maximizar)
+bind-key 4-KP_Right window-move-right-big # 6 (Derecha)
+
+# Fila Superior
+bind-key 4-KP_Home  window-move-up-big    # 7 (Esq. Sup. Izq)
+bind-key 4-KP_Up    window-move-up-big    # 8 (Arriba)
+bind-key 4-KP_Prior window-move-up-big    # 9 (Esq. Sup. Der)
+
+# ------------------------------------------------------------------------------
+# 10. GESTIÓN Y RATÓN (POWER USER)
+# ------------------------------------------------------------------------------
+
+# Ratón Híbrido (Mantén WIN y pulsa click en cualquier lado de la ventana)
+bind-mouse 4-1 window-move      # Click Izq: Mover
+bind-mouse 4-2 window-resize    # Click Medio: Redimensionar (más cómodo que el derecho a veces)
+bind-mouse 4-3 window-lower     # Click Der: Enviar al fondo
+
+# Gestión de Ventanas y Sesión
+bind-key 4S-q window-delete    # Cerrar ventana
+bind-key 4S-r restart          # Recargar configuración (sin salir)
+bind-key 4S-e quit             # Cerrar sesión (Salir a tty)
+
+# STICKY (Win + p) -> "Pegar" ventana
+# Hace que la ventana te siga a todos los grupos/escritorios.
+bind-key 4-p window-stick
+
+# Ocultar / Restaurar
+bind-key 4-period window-hide       # Ocultar (Win + .)
+bind-key 4-S-period window-unhide   # Restaurar (Win + Shift + .)
