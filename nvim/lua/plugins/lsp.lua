@@ -1,36 +1,29 @@
 return {
-  -- Mason: Instala servidores LSP, formatters y linters
   {
     "williamboman/mason.nvim",
     cmd = "Mason",
     keys = { { "<leader>m", "<cmd>Mason<cr>", desc = "Mason" } },
-    config = true, -- Esto equivale a require("mason").setup()
+    config = true, 
   },
 
   {
     "neovim/nvim-lspconfig",
     dependencies = {
       "williamboman/mason-lspconfig.nvim",
-      "hrsh7th/cmp-nvim-lsp", -- Necesario para conectar con el autocompletado
+      "hrsh7th/cmp-nvim-lsp",
     },
     config = function()
-      -- 1. Preparamos las "capabilities" para que el autocompletado funcione
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
-      -- 2. Configuramos Mason-LSPConfig para que maneje los servidores automáticamente
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls" }, -- Asegura estos servidores
-        
-        -- cuando Mason encuentra un servidor instalado.
+        ensure_installed = { "lua_ls" },
         handlers = {
-          -- Handler por defecto (se aplica a todos los servidores no listados abajo)
           function(server_name)
             require("lspconfig")[server_name].setup({
               capabilities = capabilities,
             })
           end,
 
-          -- Handler específico para Lua (opcional, para quitar warnings de 'vim')
           ["lua_ls"] = function()
             require("lspconfig").lua_ls.setup({
               capabilities = capabilities,
@@ -46,7 +39,6 @@ return {
     end
   },
 
-  -- Autocompletado (nvim-cmp)
   {
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
