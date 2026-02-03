@@ -59,7 +59,19 @@ bind-key 4S-9           window-movetogroup-9
 bind-key 4-Return "kitty --single-instance"         
 bind-key 4-w menu-window       
 bind-key 4-d menu-exec        
-bind-key 4-s menu-ssh        
+bind-key 4-s menu-ssh 
+
+bind-key XF86AudioRaiseVolume "pactl set-sink-volume @DEFAULT_SINK@ +5%"
+bind-key XF86AudioLowerVolume "pactl set-sink-volume @DEFAULT_SINK@ -5%"
+bind-key XF86AudioMute        "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+
+bind-key F1 "playerctl previous"
+bind-key F2 "playerctl next"
+bind-key XF86AudioPlay "playerctl play-pause"
+
+bind-key M-KP_Add "brightnessctl set 5%+"
+bind-key M-KP_Subtract "brightnessctl set 5%-"
+
 # ------------------------------------------------------------------------------
 # 4. VIM KEYS
 # ------------------------------------------------------------------------------
