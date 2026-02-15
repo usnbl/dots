@@ -1,5 +1,5 @@
--- General config
 local opt = vim.opt
+
 -- --- Visual ---
 opt.number = true
 opt.relativenumber = false
@@ -28,52 +28,168 @@ opt.updatetime = 50
 opt.splitbelow = true
 opt.splitright = true
 
-vim.opt.title = true
-
-vim.opt.titlestring = "%t %m%r - nvim" 
+opt.title = true
+opt.titlestring = "%t %m%r - nvim"
 
 vim.api.nvim_create_autocmd("VimLeave", {
   callback = function()
     vim.opt.title = false
   end,
 })
--- Keymaps
+
+-- ==========================================================================
+-- 1. KEYMAPS BASE
+-- ==========================================================================
 vim.g.mapleader = ","
 
 vim.keymap.set("n", "<leader>w", ":w<CR>", { desc = "Save file" })
 vim.keymap.set("n", "<leader>q", ":q<CR>", { desc = "Close" })
 
-vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "" })
-vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "" })
-vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "" })
-vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "" })
+vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Move left" })
+vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Move down" })
+vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Move up" })
+vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Move right" })
 
-vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "clean" })
-
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "clean search" })
 
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
 
-
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
 
--- Clipboard
+-- Clipboard safe
 vim.keymap.set("n", "x", "\"_x")
 vim.keymap.set("x", "<leader>p", "\"_dP", { desc = "safe paste" })
 
--- PLUGINS KEYMAPS
--- Telescope
-vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<CR>", { desc = 'Telescope find files' })
-vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<CR>", { desc = 'Telescope live grep' })
-vim.keymap.set("n", "<leader>fb", "<cmd>Telescope buffers<CR>", { desc = 'Telescope buffers' })
-vim.keymap.set("n", "<leader>fh", "<cmd>Telescope help_tags<CR>", { desc = 'Telescope help tags' })
+-- ==========================================================================
+-- 2. VIM-PLUG
+-- ==========================================================================
+local data_dir = vim.fn.stdpath('data')
+local plug_path = data_dir .. '/site/autoload/plug.vim'
 
--- Trouble
-vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "errors panel" })
-vim.keymap.set("n", "<leader>xw", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Errors (Buffer)" })
-vim.keymap.set("n", "<leader>cl", "<cmd>Trouble lsp toggle focus=false win.position=right<cr>", { desc = "LSP References/definition" })
+if vim.fn.empty(vim.fn.glob(plug_path)) > 0 then
+  print("vim-plug...")
+  vim.fn.system({
+    'curl', '-fLo', plug_path, '--create-dirs',
+    'https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  })
+  vim.cmd([[autocmd VimEnter * PlugInstall | source $MYVIMRC]])
+end
 
--- Import plugins modules
-require("config.lazy")
-vim.cmd("colorscheme kanagawa")
+local Plug = vim.fn['plug#']
+vim.call('plug#begin', data_dir .. '/plugged')
+
+-- LSP and autocompletion
+Plug('neovim/nvim-lspconfig')
+Plug('hrsh7th/nvim-cmp')
+Plug('hrsh7th/cmp-nvim-lsp')
+
+-- Utils
+Plug('windwp/nvim-autopairs')
+Plug('nvim-lualine/lualine.nvim')
+Plug("ellisonleao/gruvbox.nvim")
+-- FZF (Search)
+Plug('junegunn/fzf')
+Plug('junegunn/fzf.vim')
+
+vim.call('plug#end')
+
+-- ==========================================================================
+-- 3. PLUGINS CONFIGURATION AND FZF
+-- ==========================================================================
+-- colorscheme
+vim.o.background = "dark"
+vim.cmd([[colorscheme gruvbox]])
+-- FZF
+vim.keymap.set("n", "<leader>f", ":Files<CR>", { desc = "finder" })
+vim.keymap.set("n", "<leader>b", ":Buffers<CR>", { desc = "list the open Buffers" })
+vim.keymap.set("n", "<leader>s", ":Rg<CR>", { desc = "search text in files" })
+
+-- Autopairs
+local ap_status, autopairs = pcall(require, "nvim-autopairs")
+if ap_status then
+    autopairs.setup({})
+end
+
+-- nvim-cmp
+local cmp_status, cmp = pcall(require, "cmp")
+if cmp_status then
+  cmp.setup({
+    mapping = {
+      ['<Tab>'] = cmp.mapping(function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          fallback()
+        end
+      end, { 'i', 's' }),
+
+      -- Shift + Tab para subir en el menú
+      ['<S-Tab>'] = cmp.mapping(function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        else
+          fallback()
+        end
+      end, { 'i', 's' }),
+
+      ['<CR>'] = cmp.mapping.confirm({ select = true }),
+      ['<C-Space>'] = cmp.mapping.complete(),
+    },
+    sources = { { name = 'nvim_lsp' } }
+  })
+end
+
+-- lualine
+local lualine_status, lualine = pcall(require, "lualine")
+if lualine_status then
+  lualine.setup({ options = { icons_enabled = false, theme = 'auto' } })
+end
+
+-- diagnostics
+vim.diagnostic.config({
+  virtual_text = { prefix = '●' },
+  signs = true,
+  underline = true,
+  update_in_insert = false,
+  float = false,
+})
+-- ==========================================================================
+-- 4. LSP 
+-- ==========================================================================
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+local cmp_lsp_status, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
+if cmp_lsp_status then
+    capabilities = cmp_nvim_lsp.default_capabilities()
+end
+
+-- C / C++ 
+vim.lsp.config.clangd = vim.tbl_deep_extend('force', vim.lsp.config.clangd or {}, {
+  capabilities = capabilities,
+  cmd = { "clangd", "--background-index" },
+})
+vim.lsp.enable("clangd")
+
+-- Lua
+vim.lsp.config.lua_ls = vim.tbl_deep_extend('force', vim.lsp.config.lua_ls or {}, {
+  capabilities = capabilities,
+  settings = {
+    Lua = {
+      diagnostics = { globals = {'vim'} },
+      workspace = { checkThirdParty = false },
+    }
+  }
+})
+vim.lsp.enable("lua_ls")
+
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(args)
+    local opts = { buffer = args.buf }
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+    vim.keymap.set('n', '<leader>e', vim.diagnostic.setloclist, opts)
+
+  end,
+})
