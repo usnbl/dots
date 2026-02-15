@@ -125,7 +125,6 @@ if cmp_status then
         end
       end, { 'i', 's' }),
 
-      -- Shift + Tab para subir en el menú
       ['<S-Tab>'] = cmp.mapping(function(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
