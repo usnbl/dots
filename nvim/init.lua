@@ -1,3 +1,4 @@
+-- this config require cland, lua-language-serer, pandoc, git and curl
 local opt = vim.opt
 
 -- --- Visual ---
@@ -7,7 +8,6 @@ opt.signcolumn = "yes"
 opt.termguicolors = true    -- Colors 24-bits
 opt.cursorline = true
 opt.wrap = false
-
 -- --- Indentation (4) ---
 opt.tabstop = 4
 opt.shiftwidth = 4
@@ -84,6 +84,8 @@ vim.call('plug#begin', data_dir .. '/plugged')
 Plug('neovim/nvim-lspconfig')
 Plug('hrsh7th/nvim-cmp')
 Plug('hrsh7th/cmp-nvim-lsp')
+Plug('L3MON4D3/LuaSnip')
+Plug('saadparwaiz1/cmp_luasnip')
 
 -- Utils
 Plug('windwp/nvim-autopairs')
@@ -112,34 +114,44 @@ if ap_status then
     autopairs.setup({})
 end
 
--- nvim-cmp
+-- nvim-cmp + LuaSnip
 local cmp_status, cmp = pcall(require, "cmp")
-if cmp_status then
+local ls_status, luasnip = pcall(require, "luasnip")
+
+if cmp_status and ls_status then
   cmp.setup({
+    snippet = {
+      expand = function(args)
+        luasnip.lsp_expand(args.body)
+      end,
+    },
     mapping = {
+      ['<CR>'] = cmp.mapping.confirm({ select = false }), 
       ['<Tab>'] = cmp.mapping(function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
+        elseif luasnip.expand_or_jumpable() then
+          luasnip.expand_or_jump()
         else
           fallback()
         end
       end, { 'i', 's' }),
-
       ['<S-Tab>'] = cmp.mapping(function(fallback)
         if cmp.visible() then
           cmp.select_prev_item()
+        elseif luasnip.jumpable(-1) then
+          luasnip.jump(-1)
         else
           fallback()
         end
       end, { 'i', 's' }),
-
-      ['<CR>'] = cmp.mapping.confirm({ select = true }),
-      ['<C-Space>'] = cmp.mapping.complete(),
     },
-    sources = { { name = 'nvim_lsp' } }
+    sources = { 
+      { name = 'luasnip', priority = 1000 },
+      { name = 'nvim_lsp' } 
+    }
   })
 end
-
 -- lualine
 local lualine_status, lualine = pcall(require, "lualine")
 if lualine_status then
@@ -192,3 +204,101 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
   end,
 })
+
+-- ==========================================================================
+-- 5. markdown
+-- ==========================================================================
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function(event)
+    vim.opt_local.wrap = true
+    vim.opt_local.linebreak = true
+    vim.opt_local.conceallevel = 2
+    vim.opt_local.spell = true
+    vim.opt_local.spelllang = "es,en"
+    vim.keymap.set("n", "<leader>c", function()
+      local file = vim.fn.expand("%:p")
+      local out = vim.fn.expand("%:p:r") .. ".pdf"
+      print("Pandoc: Compiling...")
+      vim.fn.jobstart({"pandoc", file, "-o", out}, {
+        on_exit = function(_, code)
+          if code == 0 then print("OK: PDF ready") else print("Error") end
+        end
+      })
+    end, { buffer = event.buf, desc = "Compilar Markdown a PDF" })
+      end,
+})
+
+if ls_status then
+  luasnip.add_snippets("markdown", {
+    -- 1. basic md
+    luasnip.parser.parse_snippet(";h1", "# $0"),
+    luasnip.parser.parse_snippet(";h2", "## $0"),
+    luasnip.parser.parse_snippet(";h3", "### $0"),
+    luasnip.parser.parse_snippet(";mt", "$$\n$1\n$$ $0"),
+    luasnip.parser.parse_snippet(";cd", "```$1\n$2\n``` $0"),
+    luasnip.parser.parse_snippet(";td", "- [ ] $0"),
+    luasnip.parser.parse_snippet(";b", "**$1**$0"),
+    luasnip.parser.parse_snippet(";i", "*$1*$0"),
+
+    -- 2. Calculus and Algebra
+    luasnip.parser.parse_snippet(";f", "\\\\frac{$1}{$2} $0"),
+    luasnip.parser.parse_snippet(";in", "\\\\int_{$1}^{$2} $3 \\, d$0"),
+    luasnip.parser.parse_snippet(";iint", "\\\\iint_{$1} $0"),
+    luasnip.parser.parse_snippet(";oint", "\\\\oint_{$1} $0"),
+    luasnip.parser.parse_snippet(";lim", "\\\\lim_{${1:x} \\\\to ${2:\\\\infty}} $0"),
+    luasnip.parser.parse_snippet(";sum", "\\\\sum_{${1:n=1}}^{${2:\\\\infty}} $0"),
+    luasnip.parser.parse_snippet(";sq", "\\\\sqrt{$1} $0"),
+    luasnip.parser.parse_snippet(";pr", "\\\\frac{\\\\partial $1}{\\\\partial $2} $0"),
+    luasnip.parser.parse_snippet(";der", "\\\\frac{d$1}{d$2} $0"),
+    luasnip.parser.parse_snippet(";vec", "\\\\vec{$1} $0"),
+    luasnip.parser.parse_snippet(";hat", "\\\\hat{$1} $0"),
+    luasnip.parser.parse_snippet(";mat", "\\\\begin{pmatrix} $1 \\\\end{pmatrix} $0"),
+    luasnip.parser.parse_snippet(";cas", "\\\\begin{cases} $1 \\\\end{cases} $0"),
+    luasnip.parser.parse_snippet(";gr", "\\\\nabla $0"),
+    luasnip.parser.parse_snippet(";no", "\\\\| $1 \\\\| $0"),
+
+    -- 3. logic
+    luasnip.parser.parse_snippet(";el", "\\\\in $0"),
+    luasnip.parser.parse_snippet(";nel", "\\\\notin $0"),
+    luasnip.parser.parse_snippet(";fa", "\\\\forall $0"),
+    luasnip.parser.parse_snippet(";ex", "\\\\exists $0"),
+    luasnip.parser.parse_snippet(";->", "\\\\rightarrow $0"),
+    luasnip.parser.parse_snippet(";=>", "\\\\Rightarrow $0"),
+    luasnip.parser.parse_snippet(";mto", "\\\\mapsto $0"),
+    luasnip.parser.parse_snippet(";iff", "\\\\iff $0"),
+    luasnip.parser.parse_snippet(";ne", "\\\\neq $0"),
+    luasnip.parser.parse_snippet(";ge", "\\\\geq $0"),
+    luasnip.parser.parse_snippet(";le", "\\\\leq $0"),
+    luasnip.parser.parse_snippet(";ap", "\\\\approx $0"),
+    luasnip.parser.parse_snippet(";oo", "\\\\infty $0"),
+    luasnip.parser.parse_snippet(";RR", "\\\\mathbb{R}"),
+    luasnip.parser.parse_snippet(";NN", "\\\\mathbb{N}"),
+    luasnip.parser.parse_snippet(";ZZ", "\\\\mathbb{Z}"),
+    luasnip.parser.parse_snippet(";CC", "\\\\mathbb{C}"),
+    luasnip.parser.parse_snippet(";sub", "\\\\subseteq $0"),
+    luasnip.parser.parse_snippet(";and", "\\\\land $0"),
+    luasnip.parser.parse_snippet(";or", "\\\\lor $0"),
+
+    -- 4. ALFABETO GRIEGO (Física y Matemáticas)
+    luasnip.parser.parse_snippet(";a", "\\\\alpha"),
+    luasnip.parser.parse_snippet(";b", "\\\\beta"),
+    luasnip.parser.parse_snippet(";g", "\\\\gamma"),
+    luasnip.parser.parse_snippet(";G", "\\\\Gamma"),
+    luasnip.parser.parse_snippet(";d", "\\\\delta"),
+    luasnip.parser.parse_snippet(";D", "\\\\Delta"),
+    luasnip.parser.parse_snippet(";e", "\\\\epsilon"),
+    luasnip.parser.parse_snippet(";t", "\\\\theta"),
+    luasnip.parser.parse_snippet(";T", "\\\\Theta"),
+    luasnip.parser.parse_snippet(";l", "\\\\lambda"),
+    luasnip.parser.parse_snippet(";m", "\\\\mu"),
+    luasnip.parser.parse_snippet(";p", "\\\\pi"),
+    luasnip.parser.parse_snippet(";r", "\\\\rho"),
+    luasnip.parser.parse_snippet(";s", "\\\\sigma"),
+    luasnip.parser.parse_snippet(";S", "\\\\Sigma"),
+    luasnip.parser.parse_snippet(";o", "\\\\omega"),
+    luasnip.parser.parse_snippet(";O", "\\\\Omega"),
+    luasnip.parser.parse_snippet(";fi", "\\\\phi"),
+    luasnip.parser.parse_snippet(";psi", "\\\\psi"),
+  })
+end
